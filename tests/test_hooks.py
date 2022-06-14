@@ -139,6 +139,7 @@ class SNSSignalHookTestCase(BaseHooksTestCase):
             {"model": "tests.fakemodel", "pk": None, "fields": {"name": "Neapolitan"}},
         )
 
+
 class HTTPSignalHookTestCase(BaseHooksTestCase):
     @responses.activate
     @pytest.mark.django_db
