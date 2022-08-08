@@ -2,6 +2,7 @@ import logging
 
 from django.db import models
 from django.db import transaction
+from django.db.models.signals import pre_save
 from django.core.serializers import serialize
 from signalhooks import signals
 
@@ -12,7 +13,7 @@ class NotifiableModelChangeMixin(models.Model):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._old_instance = None
-        signals.pre_update.connect(NotifiableModelChangeMixin.save_old_instance, self.__class__)
+        pre_save.connect(NotifiableModelChangeMixin.save_old_instance, self.__class__)
 
     @staticmethod
     def save_old_instance(sender, instance, **kwargs):
@@ -30,7 +31,6 @@ class NotifiableModelChangeMixin(models.Model):
 class NotifiableContentSerializer:
     @transaction.atomic
     def update(self, instance, validated_data):
-        signals.pre_update.send(sender=instance.__class__, instance=instance)
         instance = super().update(instance, validated_data)
         signals.post_update.send(sender=instance.__class__,
             instance=instance,
