@@ -32,8 +32,7 @@ class NotifiableContentSerializer:
     @transaction.atomic
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
-        signals.post_update.send(sender=instance.__class__,
-            instance=instance,
-            raw=None,
-            created=False)
+        signals.post_update.send(
+            sender=instance.__class__, instance=instance, raw=None, created=False
+        )
         return instance
