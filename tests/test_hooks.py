@@ -3,7 +3,7 @@ import json
 import base64
 
 from django.test import TestCase
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.db import models
 
 import moto
@@ -11,7 +11,7 @@ import boto3
 import pytest
 import responses
 
-from signalhooks.hooks import SNSSignalHook, HTTPSignalHook
+from signalhooks.hooks import SNSSignalHook, HTTPSignalHook, SNSDeletedSignalHook
 
 
 class FakeModel(models.Model):
@@ -189,6 +189,62 @@ class SNSSignalHookTestCase(BaseHooksTestCase):
         self.assertEqual(
             json_instance,
             {"model": "tests.fakemodel", "pk": None, "fields": {"name": "Neapolitan"}},
+        )
+
+    @moto.mock_sns
+    @moto.mock_sqs
+    @pytest.mark.django_db
+    def test_sns_signal_hook_for_deletion(self):
+        """
+        Should send a SNS Notification with the serialized Model instance.
+        """
+        sns_client = boto3.client("sns", region_name="us-east-1")
+        topic = sns_client.create_topic(Name="testing-topic")
+        topic_arn = topic["TopicArn"]
+
+        # add SQS subscriber to be able to read a message
+        # normally you will use webhook (http, https) subscribers to
+        # notify other services
+        sqs_client = boto3.client("sqs", region_name="us-east-1")
+        queue_url = sqs_client.create_queue(QueueName="test-queue")["QueueUrl"]
+        queue_arn = sqs_client.get_queue_attributes(QueueUrl=queue_url)["Attributes"][
+            "QueueArn"
+        ]
+        sns_client.subscribe(TopicArn=topic_arn, Protocol="sqs", Endpoint=queue_arn)
+
+        hook = SNSDeletedSignalHook(sns_topic_arn=topic_arn)
+        post_delete.connect(hook, sender=FakeModel)
+
+        instance = FakeModel()
+        instance.name = "Deleted Model"
+        post_delete.send(instance=instance, sender=FakeModel)
+
+        msg = sqs_client.receive_message(QueueUrl=queue_url)
+        body = json.loads(msg["Messages"][0]["Body"])
+
+        self.assertEqual(body["Message"], "Django Signal triggered")
+        self.assertEqual(
+            body["MessageAttributes"],
+            {
+                "Event": {"Type": "String", "Value": "tests.fakemodel:deleted"},
+                "InstanceId": {"Type": "String", "Value": "None"},
+                "Instance": {
+                    "Type": "String",
+                    "Value": "eyJtb2RlbCI6ICJ0ZXN0cy5mYWtlbW9kZWwiLCAicGsiOiBudWxsLCAiZmllbGRzIjogeyJuYW1lIjogIkRlbGV0ZWQgTW9kZWwifX0=",
+                },
+            },
+        )
+
+        json_instance = json.loads(
+            base64.b64decode(body["MessageAttributes"]["Instance"]["Value"])
+        )
+        self.assertEqual(
+            json_instance,
+            {
+                "model": "tests.fakemodel",
+                "pk": None,
+                "fields": {"name": "Deleted Model"},
+            },
         )
 
 

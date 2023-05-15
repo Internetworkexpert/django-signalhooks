@@ -148,3 +148,34 @@ class SNSSignalHook(SignalHook):
             Message=self.get_sns_msg(),
             MessageAttributes=msg_attributes,
         )
+
+
+class SNSDeletedSignalHook(SNSSignalHook):
+    """
+    Signal Hook for delete signals
+    """
+
+    def get_sns_msg_attributes(self, instance=None, **kwargs):
+        if instance is None:
+            return {}
+
+        ct = ContentType.objects.get_for_model(instance)
+
+        messageAttributes = {
+            "Event": {
+                "DataType": "String",
+                "StringValue": f"{ct.app_label}.{ct.model}:deleted",
+            },
+            "InstanceId": {"DataType": "String", "StringValue": str(instance.id),},
+            "Instance": {
+                "DataType": "String",
+                "StringValue": self.serialize_instance(
+                    instance,
+                    serializer=self.serializer,
+                    nested_fields=self.nested_fields,
+                    max_depth=self.max_depth,
+                ),
+            },
+        }
+
+        return messageAttributes
