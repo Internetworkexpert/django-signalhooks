@@ -2,9 +2,21 @@ import json
 import base64
 import boto3
 import requests
+import uuid
+import logging
 
 from django.core.serializers import serialize
 from django.contrib.contenttypes.models import ContentType
+
+logger = logging.getLogger(__name__)
+
+try:
+    from log_request_id import local
+except ImportError:
+    logger.warning(
+        "[django_signalhooks] log_request_id not installed, using default request_id"
+    )
+    local = object(request_id=str(uuid.uuid4()))
 
 
 class SignalHook:
@@ -28,6 +40,7 @@ class SignalHook:
             )[1:-1]
         else:
             json_instance = serialize(serializer, [instance], ensure_ascii=False)[1:-1]
+
         return base64.b64encode(json_instance.encode("utf-8")).decode("utf-8")
 
 
@@ -114,6 +127,7 @@ class SNSSignalHook(SignalHook):
                 "StringValue": f"{ct.app_label}.{ct.model}:{'created' if created else 'updated'}",
             },
             "InstanceId": {"DataType": "String", "StringValue": str(instance.id),},
+            "request_id": getattr(local, "request_id", str(uuid.uuid4())),
             "Instance": {
                 "DataType": "String",
                 "StringValue": self.serialize_instance(
