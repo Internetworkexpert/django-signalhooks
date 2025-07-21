@@ -10,7 +10,6 @@ class AnotherChild(models.Model):
 
 
 class Parent(models.Model):
-
     name = models.CharField(max_length=100)
 
     child = models.ForeignKey(
