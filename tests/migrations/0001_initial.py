@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []
@@ -25,7 +24,9 @@ class Migration(migrations.Migration):
                 ),
                 ("name", models.CharField(max_length=100)),
             ],
-            options={"db_table": "another_child",},
+            options={
+                "db_table": "another_child",
+            },
         ),
         migrations.CreateModel(
             name="Child",
