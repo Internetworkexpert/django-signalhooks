@@ -1,3 +1,5 @@
+from typing import Set
+
 from django.core.serializers.json import Serializer as JsonSerializer
 from django.db.models.fields.related import ForeignKey
 from django.utils.encoding import is_protected_type
@@ -9,8 +11,8 @@ class Serializer(JsonSerializer):
         self._max_depth = 0
         self._level = 0
         self._nested_fields = []
-        self._exclude_fields: set[str] = set()
-        self._include_fields: set[str] = set()
+        self._exclude_fields: Set[str] = set()
+        self._include_fields: Set[str] = set()
         self._current = None
 
     def _init_options(self):

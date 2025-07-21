@@ -39,7 +39,7 @@ def test_save_old_instance(monkeypatch, caplog, adding, expected_old):
     inst = DummyInstance(id=42, adding=adding)
 
     # Stub the serialize function in signalhooks.models to avoid real ORM calls
-    monkeypatch.setattr(models_module, "serialize", lambda fmt, objs: "old")
+    monkeypatch.setattr(models_module, "serialize", lambda fmt, objs: "[old]")
 
     # Call the mixin's save_old_instance
     NotifiableModelChangeMixin.save_old_instance(sender=DummySender, instance=inst)
