@@ -16,27 +16,45 @@ class SignalHook:
         Serializes given Model instance as JSON and encodes it as base64.
         """
         serializer = kwargs.get("serializer", "json")
+        nested_fields = kwargs.get("nested_fields", [])
+        max_depth = kwargs.get("max_depth", 0)
+        exclude_fields = kwargs.get("exclude_fields", [])
+        include_fields = kwargs.get("include_fields", [])
+
         if serializer == "json.nested":
-            nested_fields = kwargs.get("nested_fields", [])
-            max_depth = kwargs.get("max_depth", 0)
             json_instance = serialize(
                 serializer,
                 [instance],
                 ensure_ascii=False,
                 nested_fields=nested_fields,
                 max_depth=max_depth,
-            )[1:-1]
+                exclude_fields=exclude_fields,
+                include_fields=include_fields,
+            )[
+                1:-1
+            ]  # strip the surrounding list marks
         else:
-            json_instance = serialize(serializer, [instance], ensure_ascii=False)[1:-1]
+            json_instance = serialize(
+                serializer,
+                [instance],
+                ensure_ascii=False,
+            )[1:-1]
+
         return base64.b64encode(json_instance.encode("utf-8")).decode("utf-8")
 
 
 class HTTPSignalHook(SignalHook):
     def __init__(
-        self, request_url, request_method="post", **kwargs,
+        self,
+        request_url,
+        request_method="post",
+        **kwargs,
     ):
         self.request_url = request_url
         self.request_method = request_method
+
+        self.exclude_fields = kwargs.get("exclude_fields", [])
+        self.include_fields = kwargs.get("include_fields", [])
 
     def get_request_url_params(self):
         return {}
@@ -52,7 +70,11 @@ class HTTPSignalHook(SignalHook):
         return {
             "Event": f"{ct.app_label}.{ct.model}:{'created' if created else 'updated'}",
             "InstanceId": str(instance.id),
-            "Instance": self.serialize_instance(instance),
+            "Instance": self.serialize_instance(
+                instance,
+                exclude_fields=self.exclude_fields,
+                include_fields=self.include_fields,
+            ),
         }
 
     def __call__(self, signal, sender, **kwargs):
@@ -71,7 +93,7 @@ class HTTPSignalHook(SignalHook):
         )
 
 
-class SNSSignalHook(SignalHook):
+class SNSSignalHook(SignalHook):  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         sns_topic_arn,
@@ -87,6 +109,8 @@ class SNSSignalHook(SignalHook):
         self.serializer = kwargs.get("serializer", "json")
         self.nested_fields = kwargs.get("nested_fields", [])
         self.max_depth = kwargs.get("max_depth", 0)
+        self.exclude_fields = kwargs.get("exclude_fields", [])
+        self.include_fields = kwargs.get("include_fields", [])
 
     def get_sns_client(self):
         params = {"region_name": self.aws_region}
@@ -113,7 +137,7 @@ class SNSSignalHook(SignalHook):
                 "DataType": "String",
                 "StringValue": f"{ct.app_label}.{ct.model}:{'created' if created else 'updated'}",
             },
-            "InstanceId": {"DataType": "String", "StringValue": str(instance.id),},
+            "InstanceId": {"DataType": "String", "StringValue": str(instance.id)},
             "Instance": {
                 "DataType": "String",
                 "StringValue": self.serialize_instance(
@@ -121,6 +145,8 @@ class SNSSignalHook(SignalHook):
                     serializer=self.serializer,
                     nested_fields=self.nested_fields,
                     max_depth=self.max_depth,
+                    exclude_fields=self.exclude_fields,
+                    include_fields=self.include_fields,
                 ),
             },
         }
@@ -160,13 +186,12 @@ class SNSDeletedSignalHook(SNSSignalHook):
             return {}
 
         ct = ContentType.objects.get_for_model(instance)
-
-        messageAttributes = {
+        return {
             "Event": {
                 "DataType": "String",
                 "StringValue": f"{ct.app_label}.{ct.model}:deleted",
             },
-            "InstanceId": {"DataType": "String", "StringValue": str(instance.id),},
+            "InstanceId": {"DataType": "String", "StringValue": str(instance.id)},
             "Instance": {
                 "DataType": "String",
                 "StringValue": self.serialize_instance(
@@ -174,8 +199,8 @@ class SNSDeletedSignalHook(SNSSignalHook):
                     serializer=self.serializer,
                     nested_fields=self.nested_fields,
                     max_depth=self.max_depth,
+                    exclude_fields=self.exclude_fields,
+                    include_fields=self.include_fields,
                 ),
             },
         }
-
-        return messageAttributes
