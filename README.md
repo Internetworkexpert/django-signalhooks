@@ -94,7 +94,31 @@ post_save.connect(http_hook, sender=Pizza)
 
 ### SNSSignalHook
 
-![image](https://user-images.githubusercontent.com/1155573/84656610-541cad80-aee9-11ea-96c4-50c19d83be01.png)
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Lato, sans-serif", "background": "#F2F2F7", "primaryColor": "#FFFFFF", "primaryTextColor": "#1A2535", "primaryBorderColor": "#D0D2DB", "lineColor": "#C4B7F9", "secondaryColor": "#EDE9FD", "secondaryTextColor": "#7965C6", "tertiaryColor": "#E1F5EE", "tertiaryTextColor": "#4A857F", "edgeLabelBackground": "#FFFFFF"}}}%%
+flowchart LR
+  accTitle: SNSSignalHook fan-out
+  accDescr: Service 1 emits Django pre-save or post-save signals, SNSSignalHook publishes the serialized instance to SNS, and SNS fans the notification out to subscribed services.
+
+  service1["Service 1<br/>pre_save / post_save"]:::surface
+  sns["SNS"]:::inverse
+  service2["Service 2"]:::surface
+  service3["Service 3"]:::surface
+  serviceN["Service N"]:::surface
+
+  service1 -->|serialized instance| sns
+  sns -->|subscriber| service2
+  sns -->|subscriber| service3
+  sns -.->|subscriber| serviceN
+
+  %% --- INE standard styling layer (keep the five core classes verbatim) ---
+  classDef surface fill:#FFFFFF,stroke:#D0D2DB,color:#1A2535;
+  classDef inverse fill:#7965C6,stroke:#534AB7,color:#FFFFFF;
+  classDef accent fill:#EDE9FD,stroke:#C4B7F9,color:#7965C6;
+  classDef info fill:#E6F1FB,stroke:#D0D2DB,color:#185FA5;
+  classDef success fill:#E1F5EE,stroke:#B2D4D1,color:#4A857F;
+  linkStyle default stroke:#C4B7F9,stroke-width:2px;
+```
 
 [Amazon Simple Notification Service](https://aws.amazon.com/sns) (SNS) is a great
 option to keep your microservices syncronized. It's a pubsub solution where one
@@ -219,7 +243,29 @@ the non PK or m2m attributes of `c`
 
 ### HTTPSignalHook
 
-![image](https://user-images.githubusercontent.com/1155573/84656657-6a2a6e00-aee9-11ea-8722-b30f0504cdf4.png)
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Lato, sans-serif", "background": "#F2F2F7", "primaryColor": "#FFFFFF", "primaryTextColor": "#1A2535", "primaryBorderColor": "#D0D2DB", "lineColor": "#C4B7F9", "secondaryColor": "#EDE9FD", "secondaryTextColor": "#7965C6", "tertiaryColor": "#E1F5EE", "tertiaryTextColor": "#4A857F", "edgeLabelBackground": "#FFFFFF"}}}%%
+flowchart LR
+  accTitle: HTTPSignalHook callback flow
+  accDescr: Service 1 emits Django pre-save or post-save signals, HTTPSignalHook serializes the instance, and each configured service receives an HTTP POST callback.
+
+  service1["Service 1<br/>pre_save / post_save"]:::surface
+  service2["Service 2"]:::surface
+  service3["Service 3"]:::surface
+  serviceN["Service N"]:::surface
+
+  service1 -->|POST /service2<br/>serialized instance| service2
+  service1 -->|POST /service3<br/>serialized instance| service3
+  service1 -.->|serialized instance| serviceN
+
+  %% --- INE standard styling layer (keep the five core classes verbatim) ---
+  classDef surface fill:#FFFFFF,stroke:#D0D2DB,color:#1A2535;
+  classDef inverse fill:#7965C6,stroke:#534AB7,color:#FFFFFF;
+  classDef accent fill:#EDE9FD,stroke:#C4B7F9,color:#7965C6;
+  classDef info fill:#E6F1FB,stroke:#D0D2DB,color:#185FA5;
+  classDef success fill:#E1F5EE,stroke:#B2D4D1,color:#4A857F;
+  linkStyle default stroke:#C4B7F9,stroke-width:2px;
+```
 
 Performs a HTTP(S) webhook request to given URL each time the Signal is
 triggered.
