@@ -24,7 +24,7 @@ with the hook that better fits your needs.
 
 ### The problem
 
-Microservice architectures are great, but keeping services syncronized about
+Microservice architectures are great, but keeping services synchronized about
 distributed events can be very challenging.
 
 Sample use case:
@@ -44,7 +44,7 @@ A more complex use case:
 When "Model X" is deleted in "Service 1", do "X" in "Service 2" and "Y" in "Service 3".
 ```
 
-Many subscribers might be interested in listeting when `Model X` instances get
+Many subscribers might be interested in listening when `Model X` instances get
 updated/deleted. And all services might be interested in receiving the instance
 attributes/ID to react accordingly.
 
@@ -52,10 +52,10 @@ attributes/ID to react accordingly.
 
 Currently, these are the supported hooks:
 
-- `SNSSignalHook`: Publishes a message to a AWS SNS Topic each time a Signal is
+- `SNSSignalHook`: Publishes a message to an AWS SNS Topic each time a Signal is
   triggered.
-- `HTTPSignalHook`: Performs a HTTP(S) webhook request each time a Signal is
-  trigerred.
+- `HTTPSignalHook`: Performs an HTTP(S) webhook request each time a Signal is
+  triggered.
 - Any other idea?
   [Create an issue](https://github.com/Internetworkexpert/django-signalhooks/issues/new).
 
@@ -121,15 +121,15 @@ flowchart LR
 ```
 
 [Amazon Simple Notification Service](https://aws.amazon.com/sns) (SNS) is a great
-option to keep your microservices syncronized. It's a pubsub solution where one
+option to keep your microservices synchronized. It's a pubsub solution where one
 service can publish notifications to a "topic", and any other services can
 subscribe to receive those notifications.
 
-`SNSSignalHook` let you send a SNS Notification to certain Topic when a Django
+`SNSSignalHook` lets you send an SNS notification to a certain topic when a Django
 Signal is triggered. If the Signal is an instance of
 [ModelSignal](https://docs.djangoproject.com/en/3.0/ref/signals/#module-django.db.models.signals),
 the SNS notification will serialize the sender instance as JSON and send it in
-the notification payload as `base64` encoded.
+the notification payload as `base64`-encoded.
 
 #### How to use it
 
@@ -179,12 +179,12 @@ sns_client.publish(
 Note that `"Instance"` is a JSON serialization of your `Pizza` model, encoded as
 `base64` to allow transportation in a JSON payload.
 
-### New Nested Json Serializer
+### New Nested JSON Serializer
 
 Note: This feature is available since `v0.1.4` and only for SNSSignalHooks
 
-The default json serializer serializes the primary key or natural keys for
-ForeingKey or ManyToMany relationships. This is not helpful if we need to know
+The default JSON serializer serializes the primary key or natural keys for
+ForeignKey or ManyToMany relationships. This is not helpful if we need to know
 additional information about the nested fields. Now we have a new Nested
 Serializer to do this job.
 
@@ -309,7 +309,7 @@ hook_service2 = HTTPSignalHook(
 post_save.connect(hook_service2, sender=Pizza)
 ```
 
-Each time the `Pizza` models is saved, both `Service 1` and `Service 2` will get
+Each time the `Pizza` model is saved, both `Service 1` and `Service 2` will get
 notified.
 
 ## Development
