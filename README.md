@@ -1,7 +1,7 @@
 # django-signalhooks
 
-[![Travis status](https://travis-ci.org/martinzugnoni/django-signalhooks.svg?branch=master)](https://travis-ci.org/martinzugnoni/django-signalhooks)
-[![Coverage](https://codecov.io/gh/martinzugnoni/django-signalhooks/branch/master/graphs/badge.svg?branch=master)](https://codecov.io/gh/martinzugnoni/django-signalhooks)
+[![Travis status](https://api.travis-ci.com/Internetworkexpert/django-signalhooks.svg?branch=master)](https://app.travis-ci.com/github/Internetworkexpert/django-signalhooks)
+[![Coverage](https://codecov.io/gh/Internetworkexpert/django-signalhooks/branch/master/graphs/badge.svg?branch=master)](https://codecov.io/gh/Internetworkexpert/django-signalhooks)
 
 > A reusable Django package that turns Django Signals into outbound
 > notifications (AWS SNS or HTTP webhooks) so distributed services stay in sync.
@@ -342,7 +342,7 @@ It runs `black --check`, `pylint` (using `.pylintrc`), and `pytest` with a
 
 ## CI
 
-Continuous integration runs on [Travis CI](https://travis-ci.org/), configured
+Continuous integration runs on [Travis CI](https://www.travis-ci.com/), configured
 in [`.travis.yml`](.travis.yml). On each push the pipeline:
 
 - Builds against Python `3.8` and `3.7`.
