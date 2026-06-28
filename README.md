@@ -181,7 +181,7 @@ Note that `"Instance"` is a JSON serialization of your `Pizza` model, encoded as
 
 ### New Nested JSON Serializer
 
-Note: This feature is available since `v0.1.4` and only for SNSSignalHooks
+Note: This feature is available since `v0.1.4` and only for `SNSSignalHook`.
 
 The default JSON serializer serializes the primary key or natural keys for
 ForeignKey or ManyToMany relationships. This is not helpful if we need to know
